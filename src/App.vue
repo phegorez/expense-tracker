@@ -18,28 +18,43 @@ import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 
 // Firebase include
-import {collection, addDoc} from 'firebase/firestore'
-import {db} from './firebase/init.js'
+import { collection, addDoc, getDocs, query, deleteDoc, doc } from 'firebase/firestore'
+import { db } from './firebase/init.js'
 
 
-// Test fire base 
-const createUser = async () => {
-  const colRef = collection(db, 'users')
-  const dataObj = {
-    firstName: 'John',
-    lastName: 'Doe',
-    email: "john@doe.com",
-  }
-
-  const docRef = await addDoc(colRef, dataObj)
-
-  console.log('Document was created with ID:', docRef.id);
-}
-createUser()
 // Global State
 // transactionList
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 const transactionList = ref([])
+const test = ref([])
+
+// Store data to firebase fireStore
+const saveTransaction = async (text, amount) => {
+  const colRef = collection(db, 'transactions')
+  const transaction = {
+    id: randomID(),
+    text: text,
+    amount: amount
+  }
+  const docRef = await addDoc(colRef, transaction)
+  test.value.push(docRef.id)
+  console.log('Document was created with ID:', docRef.id);
+}
+// Get data from firebase fireStore
+const getTransactions = async () => {
+  const querySnap = await getDocs(query(collection(db, 'transactions')))
+
+  querySnap.forEach((doc) => {
+    transactionList.value.push(doc.data())
+  })
+}
+onMounted(() => {
+  getTransactions();
+})
+// Delete data from firebase fireStore
+const deleteTransaction = async (id) => {
+  await deleteDoc(doc(db, 'transactions', id))
+}
 
 // getBalance
 const getBalance = computed(() => {
@@ -47,12 +62,6 @@ const getBalance = computed(() => {
     return acc + curr.amount
   }, 0)
 })
-
-// const getBalance = () => {
-//   return transactionList.value.reduce((acc, curr) => {
-//     return acc + curr.amount
-//   }, 0)
-// }
 
 // getIncome
 const getIncome = computed(() => {
@@ -95,21 +104,18 @@ const handleSubmit = (text, amount) => {
       autoClose: 2000
     })
   }
-
+  saveTransaction(text, amount)
 }
 
 // randomID
 const randomID = () => {
-  return Math.floor(Math.random * 1000000)
+  return Math.floor(Math.random() * 1000000)
 }
 
 // delete selected transaction
 const handleDelete = (id) => {
-  transactionList.value = transactionList.value.filter(transaction => {
-    return transaction.id !== id
-  })
+  deleteTransaction(id)
 }
 
 
 </script>
-
