@@ -9,41 +9,64 @@
 </template>
 
 <script setup>
+// include components
 import Header from './components/Header.vue';
 import Balance from './components/Balance.vue';
 import IncomeExpense from './components/IncomeExpense.vue';
 import TransactionHistory from './components/TransactionHistory.vue'
 import AddNewTransactions from './components/AddNewTransactions.vue'
+
+// include toastify
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 
-// Firebase include
-import { collection, addDoc, getDocs, query, deleteDoc, doc } from 'firebase/firestore'
+// include firebase
+import { collection, getDocs, query, deleteDoc, doc, setDoc } from 'firebase/firestore'
 import { db } from './firebase/init.js'
 
+// include vue hook
+import { ref, computed, onMounted } from 'vue';
 
 // Global State
 // transactionList
-import { ref, computed, onMounted } from 'vue';
 const transactionList = ref([])
-const test = ref([])
 
 // Store data to firebase fireStore
-const saveTransaction = async (text, amount) => {
+const saveTransaction = async (text, amount, uniqID) => {
+
+  // access collection in firestore name transactions
   const colRef = collection(db, 'transactions')
+  // access doccument and set ID via uniqID
+  const docRef = doc(colRef, String(uniqID))
+
+  // object data bluprint
   const transaction = {
-    id: randomID(),
+    id: String(uniqID),
     text: text,
-    amount: amount
+    amount: amount,
+    date: getCurrentDate()
   }
-  const docRef = await addDoc(colRef, transaction)
-  test.value.push(docRef.id)
-  console.log('Document was created with ID:', docRef.id);
+
+  // set data in doccument
+  await setDoc(docRef, transaction)
+}
+// Get Date
+const getCurrentDate = () => {
+  let date = new Date()
+  let year = date.getFullYear();
+  let month = date.getMonth() + 1; // Months are zero-based, so we add 1
+  let day = date.getDate();
+  let currentDate = `${year}-${month}-${day}`
+  return currentDate
 }
 // Get data from firebase fireStore
 const getTransactions = async () => {
   const querySnap = await getDocs(query(collection(db, 'transactions')))
 
+  // clear existing data in transactionList
+  transactionList.value = []
+
+  // push new data to transactionList
   querySnap.forEach((doc) => {
     transactionList.value.push(doc.data())
   })
@@ -53,7 +76,7 @@ onMounted(() => {
 })
 // Delete data from firebase fireStore
 const deleteTransaction = async (id) => {
-  await deleteDoc(doc(db, 'transactions', id))
+  await deleteDoc(doc(db, 'transactions', String(id)))
 }
 
 // getBalance
@@ -86,25 +109,18 @@ const getExpense = computed(() => {
 })
 
 // submit new transaction
-const handleSubmit = (text, amount) => {
+const handleSubmit = async (text, amount) => {
   if (!text || !amount) {
     toast.error('Please fill all filed', {
       autoClose: 2000
     })
   } else {
-    transactionList.value = [
-      ...transactionList.value,
-      {
-        id: randomID(),
-        text: text,
-        amount: amount
-      }
-    ]
+    await saveTransaction(text, amount, randomID())
     toast.success('New transaction is add', {
       autoClose: 2000
     })
   }
-  saveTransaction(text, amount)
+  await getTransactions()
 }
 
 // randomID
@@ -113,8 +129,12 @@ const randomID = () => {
 }
 
 // delete selected transaction
-const handleDelete = (id) => {
-  deleteTransaction(id)
+const handleDelete = async (id) => {
+  toast.success('Delete transaction', {
+    autoClose: 2000
+  })
+  await deleteTransaction(id)
+  await getTransactions()
 }
 
 
