@@ -1,11 +1,13 @@
 <template>
-  <Header />
-  <div class="container">
-    <Balance :getBalance="getBalance" />
-    <IncomeExpense :getIncome="getIncome" :getExpense="getExpense" />
-    <TransactionHistory :transactionList="transactionList" @deleteTransaction='handleDelete' />
-    <AddNewTransactions @addNewTransaction="handleSubmit" />
-  </div>
+  <main class="main">
+    <Header />
+    <div class="main-container ">
+      <Balance :getBalance="getBalance" />
+      <IncomeExpense :getIncome="getIncome" :getExpense="getExpense" />
+      <TransactionHistory :transactionList="transactionList" @deleteTransaction='handleDelete' />
+      <AddNewTransactions @addNewTransaction="handleSubmit" />
+    </div>
+  </main>
 </template>
 
 <script setup>

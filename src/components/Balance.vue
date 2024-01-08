@@ -1,6 +1,6 @@
 <template>
     <h4>Your Balance</h4>
-    <h1 id="balance">฿{{getBalance}}</h1>
+    <h1 id="balance" class="balance">฿ {{getBalance}}</h1>
 </template>
 
 <script setup>
