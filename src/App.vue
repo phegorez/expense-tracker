@@ -23,7 +23,7 @@ import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 
 // include firebase
-import { collection, getDocs, query, deleteDoc, doc, setDoc } from 'firebase/firestore'
+import { collection, getDocs, query, deleteDoc, doc, setDoc, Timestamp } from 'firebase/firestore'
 import { db } from './firebase/init.js'
 
 // include vue hook
@@ -46,21 +46,13 @@ const saveTransaction = async (text, amount, uniqID) => {
     id: String(uniqID),
     text: text,
     amount: amount,
-    date: getCurrentDate()
+    timestame: Timestamp.now()
   }
 
   // set data in doccument
   await setDoc(docRef, transaction)
 }
-// Get Date
-const getCurrentDate = () => {
-  let date = new Date()
-  let year = date.getFullYear();
-  let month = date.getMonth() + 1; // Months are zero-based, so we add 1
-  let day = date.getDate();
-  let currentDate = `${year}-${month}-${day}`
-  return currentDate
-}
+
 // Get data from firebase fireStore
 const getTransactions = async () => {
   const querySnap = await getDocs(query(collection(db, 'transactions')))
